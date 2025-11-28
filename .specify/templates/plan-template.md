@@ -31,7 +31,19 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+**Architecture Compliance** (for Next.js projects):
+- [ ] Feature structure follows `lib/<feature>/` convention
+- [ ] Layer separation maintained: UI → Presenter → Use Case → Repository → External
+- [ ] No upward dependencies (lower layers independent of upper layers)
+- [ ] Type-safe interfaces defined at all layer boundaries
+- [ ] External interactions isolated in external layer
+
+**General Gates**:
+- [ ] Feature is independently testable
+- [ ] Dependencies are explicit and justified
+- [ ] No violations of core principles (or documented if necessary)
+
+[Additional gates determined based on constitution file and project type]
 
 ## Project Structure
 
@@ -89,6 +101,31 @@ api/
 
 ios/ or android/
 └── [platform-specific structure: feature modules, UI flows, platform tests]
+
+# [REMOVE IF UNUSED] Option 4: Next.js with Clean Architecture
+app/
+└── <route>/
+    └── page.tsx              # UI layer
+
+lib/
+└── <feature>/
+    ├── ui/
+    │   └── *.tsx             # Reusable UI components
+    ├── presenter/
+    │   └── *_store.ts        # Zustand stores (state management)
+    ├── usecase/
+    │   ├── *_repository.ts   # Repository interfaces
+    │   └── <verb>_*_usecase.ts # Business logic
+    ├── repository/
+    │   ├── *_repository_impl.ts # Repository implementations
+    │   ├── *_api_service.ts     # API service interfaces
+    │   └── *_storage.ts         # Storage interfaces
+    └── external/
+        ├── *_api_service_impl.ts # External API implementations
+        └── *_storage.ts          # Storage implementations
+
+lib/shared/
+└── [cross-feature utilities and types]
 ```
 
 **Structure Decision**: [Document the selected structure and reference the real
@@ -100,5 +137,6 @@ directories captured above]
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| [e.g., Upward dependency from repository to use case] | [specific problem requiring this] | [why strict layering insufficient] |
+| [e.g., Direct API call in use case layer] | [performance/technical constraint] | [why external layer abstraction insufficient] |
+| [e.g., Business logic in presenter] | [current need] | [why use case layer insufficient] |
