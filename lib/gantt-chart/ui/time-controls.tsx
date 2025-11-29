@@ -59,74 +59,76 @@ export default function TimeControls() {
 
   return (
     <>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={handlePanLeft}
-          className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 text-sm font-semibold text-gray-900 flex items-center gap-1 transition-colors shadow-sm"
-          title="Pan left 7 days"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Earlier
-        </button>
-
-        <button
-          onClick={handleShowAll}
-          className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 text-sm font-semibold text-gray-900 transition-colors shadow-sm"
-          title="Show all events"
-        >
-          Show All
-        </button>
-
-        <button
-          onClick={handlePanRight}
-          className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 text-sm font-semibold text-gray-900 flex items-center gap-1 transition-colors shadow-sm"
-          title="Pan right 7 days"
-        >
-          Later
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-
-        <div className="w-px h-6 bg-gray-300 mx-1" />
-
-        <button
-          onClick={handleOpenFocusModal}
-          className={`px-3 py-2 border rounded-lg text-sm font-semibold transition-colors shadow-sm ${focusPeriod
-            ? 'bg-blue-50 border-blue-400 text-blue-800 hover:bg-blue-100'
-            : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-50 hover:border-gray-400'
-            }`}
-          title="Set focus period"
-        >
-          {focusPeriod ? 'Focus Period Active' : 'Set Focus Period'}
-        </button>
-
-        {focusPeriod && (
+      <div className="flex flex-col items-end gap-2 ml-auto">
+        <div className="flex flex-wrap items-center gap-2 justify-end">
           <button
-            onClick={handleClearFocus}
+            onClick={handlePanLeft}
+            className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 text-sm font-semibold text-gray-900 flex items-center gap-1 transition-colors shadow-sm"
+            title="Pan left 7 days"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Earlier
+          </button>
+
+          <button
+            onClick={handleShowAll}
             className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 text-sm font-semibold text-gray-900 transition-colors shadow-sm"
-            title="Clear focus period"
+            title="Show all events"
           >
-            Clear Focus
+            Show All
           </button>
-        )}
-      </div>
 
-      <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200 ml-auto">
-        {(['day', 'week', 'month'] as const).map((mode) => (
           <button
-            key={mode}
-            onClick={() => setViewMode(mode)}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === mode
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
-              }`}
+            onClick={handlePanRight}
+            className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 text-sm font-semibold text-gray-900 flex items-center gap-1 transition-colors shadow-sm"
+            title="Pan right 7 days"
           >
-            {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            Later
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </button>
-        ))}
+
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+
+          <button
+            onClick={handleOpenFocusModal}
+            className={`px-3 py-2 border rounded-lg text-sm font-semibold transition-colors shadow-sm ${focusPeriod
+              ? 'bg-blue-50 border-blue-400 text-blue-800 hover:bg-blue-100'
+              : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-50 hover:border-gray-400'
+              }`}
+            title="Set focus period"
+          >
+            {focusPeriod ? 'Focus Period Active' : 'Set Focus Period'}
+          </button>
+
+          {focusPeriod && (
+            <button
+              onClick={handleClearFocus}
+              className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 text-sm font-semibold text-gray-900 transition-colors shadow-sm"
+              title="Clear focus period"
+            >
+              Clear Focus
+            </button>
+          )}
+        </div>
+
+        <div className="inline-flex bg-gray-100 p-1 rounded-lg border border-gray-200 shadow-sm">
+          {(['day', 'week', 'month'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === mode
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
+                }`}
+            >
+              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Focus Period Modal */}
