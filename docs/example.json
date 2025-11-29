@@ -1,0 +1,87 @@
+
+{
+  "events": [
+    {
+      "id": "evt-world-arch",
+      "name": "World & Lore Architecture",
+      "description": "Define timeline, factions, key regions, and core themes (fire vs. dark).",
+      "startDate": "2025-11-29",
+      "endDate": "2025-12-10",
+      "groupId": "group-design",
+      "createdAt": "2025-11-20T09:00:00.000Z",
+      "updatedAt": "2025-11-20T09:00:00.000Z"
+    },
+    {
+      "id": "evt-combat-core",
+      "name": "Combat Core Loop",
+      "description": "Lock-on, stamina consumption, i-frames tuning, parry/riposte windows.",
+      "startDate": "2025-12-06",
+      "endDate": "2025-12-24",
+      "groupId": "group-backend",
+      "createdAt": "2025-11-20T09:10:00.000Z",
+      "updatedAt": "2025-11-20T09:10:00.000Z"
+    },
+    {
+      "id": "evt-anim-cancel",
+      "name": "Animation & Cancel Windows",
+      "description": "Weapon swings, roll timings, backstab cones; tune feel to Souls cadence.",
+      "startDate": "2025-12-13",
+      "endDate": "2025-12-29",
+      "groupId": "group-frontend",
+      "createdAt": "2025-11-20T09:20:00.000Z",
+      "updatedAt": "2025-11-20T09:20:00.000Z"
+    },
+    {
+      "id": "evt-level-verticality",
+      "name": "Level 1: Vertical Citadel",
+      "description": "Interlocking shortcuts, elevators, ladders; place bonfire, mini-boss gate.",
+      "startDate": "2025-12-20",
+      "endDate": "2026-01-07",
+      "groupId": "group-design",
+      "createdAt": "2025-11-20T09:30:00.000Z",
+      "updatedAt": "2025-11-20T09:30:00.000Z"
+    },
+    {
+      "id": "evt-boss-knight",
+      "name": "Boss: Fallen Knight",
+      "description": "Phase 1 greatsword, Phase 2 flame sword; telegraph readability and punish windows.",
+      "startDate": "2025-12-27",
+      "endDate": "2026-01-14",
+      "groupId": "group-backend",
+      "createdAt": "2025-11-20T09:40:00.000Z",
+      "updatedAt": "2025-11-20T09:40:00.000Z"
+    },
+    {
+      "id": "evt-ui-hud",
+      "name": "HUD & Inventory UX",
+      "description": "Stamina/HP/FP rings, equipment load, quick slots, flask count indicators.",
+      "startDate": "2026-01-03",
+      "endDate": "2026-01-17",
+      "groupId": "group-frontend",
+      "createdAt": "2025-11-20T09:50:00.000Z",
+      "updatedAt": "2025-11-20T09:50:00.000Z"
+    },
+    {
+      "id": "evt-netplay-coop",
+      "name": "Networked Co-op & Invasions",
+      "description": "Session discovery, summon signs, invasion triggers, basic anti-cheat hooks.",
+      "startDate": "2026-01-10",
+      "endDate": "2026-01-28",
+      "groupId": "group-backend",
+      "createdAt": "2025-11-20T10:00:00.000Z",
+      "updatedAt": "2025-11-20T10:00:00.000Z"
+    }
+  ],
+  "groups": [
+    { "id": "group-frontend", "name": "Frontend", "color": "#3B82F6", "visible": true, "order": 0, "isDefault": true },
+    { "id": "group-backend", "name": "Backend", "color": "#10B981", "visible": true, "order": 1, "isDefault": true },
+    { "id": "group-design", "name": "Design", "color": "#F59E0B", "visible": true, "order": 2, "isDefault": true }
+  ],
+  "settings": {
+    "visibleStart": "2025-11-22",
+    "visibleEnd": "2026-01-31",
+    "searchKeyword": "",
+    "focusPeriod": null
+  },
+  "exportedAt": "2025-11-20T10:05:00.000Z"
+}

@@ -19,6 +19,7 @@ import TimeControls from './time-controls';
 import VersionList from './version-list';
 import GroupManager from './group-manager';
 import { useProjectStore } from '@/lib/projects/project_store';
+import { eventRepository, groupRepository } from '../repository';
 
 export default function GanttChart() {
   const {
@@ -354,23 +355,14 @@ export default function GanttChart() {
           return;
         }
 
-        // Import groups first
-        for (const group of data.groups) {
-          try {
-            await createEvent(group);
-          } catch (err) {
-            console.error('Failed to import group:', err);
-          }
-        }
+        // Replace stored data directly, then refresh UI state
+        await groupRepository.replaceAll(data.groups);
+        await eventRepository.replaceAll(data.events);
+        await loadGroups();
+        await loadEvents();
 
-        // Import events
-        for (const event of data.events) {
-          try {
-            await createEvent(event);
-          } catch (err) {
-            console.error('Failed to import event:', err);
-          }
-        }
+        // Ensure all imported groups start as visible
+        setAllGroupsVisibility(true, data.groups.map((g: { id: string }) => g.id));
 
         alert('Data imported successfully!');
       } catch (error) {
@@ -411,7 +403,7 @@ export default function GanttChart() {
   const error = eventError || groupError;
 
   const handleBack = () => {
-    const confirmed = window.confirm('返回專案列表前請先確認變更已儲存，確定要離開嗎？');
+    const confirmed = window.confirm('Please ensure your changes are saved before returning to the project list. Are you sure you want to leave?');
     if (confirmed) {
       router.push('/');
     }
