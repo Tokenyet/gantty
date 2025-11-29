@@ -206,18 +206,18 @@ This project uses Next.js Clean Architecture:
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T070 [P] Add loading states (spinners/skeletons) for all async operations in event_store, group_store, version_store presenters
-- [ ] T071 [P] Add comprehensive error handling with user-friendly error messages for ValidationError, NotFoundError, QuotaExceededError in all UI components
-- [ ] T072 [P] Add toast notifications for successful operations (event created, version saved, etc.) using a notification library or custom component
-- [ ] T073 Implement localStorage quota detection and warning when approaching limit (>80% usage) in LocalStorageService
-- [ ] T074 Add empty state illustrations/messages for: no events, no versions, no search results in respective UI components
-- [ ] T075 [P] Add keyboard shortcuts (Esc to close modals, Ctrl+S to save version, etc.) in main GanttChart component
-- [ ] T076 [P] Optimize bundle size: ensure date-fns uses tree-shaking, lazy load version comparison modal
-- [ ] T077 Add data export functionality: export current chart or version snapshot to JSON file for backup
-- [ ] T078 Add data import functionality: import JSON file to restore chart state
-- [ ] T079 Run all quickstart.md validation scenarios to ensure complete feature compliance
-- [ ] T080 [P] Add README.md with feature overview, architecture diagram, and development setup instructions at repository root
-- [ ] T081 [P] Code cleanup: remove console.logs, unused imports, add JSDoc comments to all public functions
+- [X] T070 [P] Add loading states (spinners/skeletons) for all async operations in event_store, group_store, version_store presenters
+- [X] T071 [P] Add comprehensive error handling with user-friendly error messages for ValidationError, NotFoundError, QuotaExceededError in all UI components
+- [X] T072 [P] Add toast notifications for successful operations (event created, version saved, etc.) using a notification library or custom component
+- [X] T073 Implement localStorage quota detection and warning when approaching limit (>80% usage) in LocalStorageService
+- [X] T074 Add empty state illustrations/messages for: no events, no versions, no search results in respective UI components
+- [X] T075 [P] Add keyboard shortcuts (Esc to close modals, Ctrl+S to save version, etc.) in main GanttChart component
+- [X] T076 [P] Optimize bundle size: ensure date-fns uses tree-shaking, lazy load version comparison modal
+- [X] T077 Add data export functionality: export current chart or version snapshot to JSON file for backup
+- [X] T078 Add data import functionality: import JSON file to restore chart state
+- [X] T079 Run all quickstart.md validation scenarios to ensure complete feature compliance
+- [X] T080 [P] Add README.md with feature overview, architecture diagram, and development setup instructions at repository root
+- [X] T081 [P] Code cleanup: remove console.logs, unused imports, add JSDoc comments to all public functions
 
 ---
 

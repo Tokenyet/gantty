@@ -11,9 +11,9 @@ export default function TimelineHeader({ startDate, endDate }: TimelineHeaderPro
   const days = eachDayOfInterval(startDate, endDate);
 
   return (
-    <div className="sticky top-0 z-20 flex bg-white border-b border-gray-300 shadow-sm">
+    <div className="sticky top-0 z-20 flex bg-white border-b border-gray-300 shadow-md">
       {/* Corner cell */}
-      <div className="sticky left-0 z-30 w-48 border-r border-gray-300 bg-gray-50 px-4 py-2 font-semibold">
+      <div className="sticky left-0 z-30 w-48 border-r border-gray-300 bg-gray-50 px-4 py-2 font-semibold shadow-sm">
         Event
       </div>
 
