@@ -7,6 +7,7 @@ import { useTimelineStore } from '../presenter/timeline_store';
 import { useFilterStore } from '../presenter/filter_store';
 import { useVersionStore } from '../presenter/version_store';
 import { Event } from '../usecase/types';
+import { differenceInDays } from '@/lib/shared/utils/date';
 import TimelineHeader from './timeline-header';
 import EventList from './event-list';
 import TimelineGrid from './timeline-grid';
@@ -62,10 +63,10 @@ export default function GanttChart() {
   const [isSaveVersionOpen, setIsSaveVersionOpen] = useState(false);
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
   const [versionNote, setVersionNote] = useState('');
-  
+
   // Track if groups have been initialized to prevent re-initialization
   const groupsInitialized = useRef(false);
-  
+
   // Drag-to-pan state
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
@@ -96,7 +97,7 @@ export default function GanttChart() {
           setIsGroupManagerOpen(false);
         }
       }
-      
+
       // Ctrl+S / Cmd+S to save version
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
@@ -145,13 +146,13 @@ export default function GanttChart() {
     const handleMouseDown = (e: MouseEvent) => {
       // Only drag with left mouse button
       if (e.button !== 0) return;
-      
+
       const target = e.target as HTMLElement;
-      
+
       // Don't drag if clicking on form elements
       if (
-        target.tagName === 'BUTTON' || 
-        target.tagName === 'INPUT' || 
+        target.tagName === 'BUTTON' ||
+        target.tagName === 'INPUT' ||
         target.tagName === 'TEXTAREA' ||
         target.tagName === 'SELECT'
       ) {
@@ -182,12 +183,12 @@ export default function GanttChart() {
         if (rafId) {
           cancelAnimationFrame(rafId);
         }
-        
+
         rafId = requestAnimationFrame(() => {
           container.scrollLeft = scrollStartPos.current.left + dx;
           container.scrollTop = scrollStartPos.current.top + dy;
         });
-        
+
         e.preventDefault();
         e.stopPropagation();
       }
@@ -199,12 +200,12 @@ export default function GanttChart() {
         e.preventDefault();
         e.stopPropagation();
       }
-      
+
       isDragging.current = false;
       hasDragged.current = false;
       container.style.cursor = 'grab';
       container.style.userSelect = '';
-      
+
       if (rafId) {
         cancelAnimationFrame(rafId);
         rafId = null;
@@ -237,6 +238,23 @@ export default function GanttChart() {
       }
     };
   }, []);
+
+
+  const handleFocusEvent = (event: Event) => {
+    selectEvent(event);
+
+    if (scrollContainerRef.current) {
+      const startOffset = differenceInDays(event.startDate, visibleStart);
+      const left = startOffset * 80;
+      const containerWidth = scrollContainerRef.current.clientWidth;
+
+      // Scroll to center the event start
+      scrollContainerRef.current.scrollTo({
+        left: Math.max(0, left - containerWidth / 2 + 100),
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const handleCreateEvent = () => {
     selectEvent(null);
@@ -301,7 +319,7 @@ export default function GanttChart() {
     reader.onload = async (event) => {
       try {
         const data = JSON.parse(event.target?.result as string);
-        
+
         // Validate data structure
         if (!data.events || !data.groups) {
           alert('Invalid file format');
@@ -332,7 +350,7 @@ export default function GanttChart() {
       }
     };
     reader.readAsText(file);
-    
+
     // Reset file input
     e.target.value = '';
   };
@@ -368,8 +386,8 @@ export default function GanttChart() {
   // If no groups are selected (size === 0), show empty list
   // If some groups are filtered (size < groups.length) or search is active, show filtered results
   // Otherwise show all events
-  const displayEvents = visibleGroupIds.size === 0 
-    ? [] 
+  const displayEvents = visibleGroupIds.size === 0
+    ? []
     : (searchKeyword || visibleGroupIds.size < groups.length)
       ? filteredEvents
       : events;
@@ -457,14 +475,14 @@ export default function GanttChart() {
       {/* Gantt Chart */}
       <div ref={scrollContainerRef} className="flex-1 overflow-auto relative">
         {visibleStart && visibleEnd && (
-          <div className="min-w-full">
+          <div className="min-w-full w-max">
             <TimelineHeader startDate={visibleStart} endDate={visibleEnd} />
-            
+
             <div className="flex relative">
-              <div className="sticky left-0 z-20 bg-white">
+              <div className="sticky left-0 z-20 bg-white flex-shrink-0">
                 <EventList
                   events={displayEvents}
-                  onSelectEvent={handleEditEvent}
+                  onSelectEvent={handleFocusEvent}
                   selectedEventId={selectedEvent?.id || null}
                 />
               </div>
@@ -497,7 +515,7 @@ export default function GanttChart() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Save Version</h2>
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Version Note

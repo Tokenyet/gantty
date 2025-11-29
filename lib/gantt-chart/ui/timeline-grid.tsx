@@ -24,7 +24,7 @@ export default function TimelineGrid({
   onSelectEvent
 }: TimelineGridProps) {
   const { focusPeriod } = useTimelineStore();
-  
+
   // Create a map of groups for quick lookup
   const groupMap = new Map(groups.map(g => [g.id, g]));
 
@@ -46,7 +46,7 @@ export default function TimelineGrid({
     const focusEndOffset = differenceInDays(focusPeriod.end, startDate);
     const focusStartDay = Math.max(0, focusStartOffset);
     const focusEndDay = Math.min(totalDays - 1, focusEndOffset);
-    
+
     if (focusEndDay >= 0 && focusStartDay < totalDays) {
       focusOverlay = {
         left: focusStartDay * 80,
@@ -56,7 +56,10 @@ export default function TimelineGrid({
   }
 
   return (
-    <div className="flex flex-col relative bg-white">
+    <div
+      className="flex flex-col relative bg-white"
+      style={{ minWidth: `${totalDays * 80}px` }}
+    >
       {/* Focus period highlight */}
       {focusOverlay && (
         <div
