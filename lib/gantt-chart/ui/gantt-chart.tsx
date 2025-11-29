@@ -345,17 +345,19 @@ export default function GanttChart() {
       )}
 
       {/* Gantt Chart */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto relative">
         {visibleStart && visibleEnd && (
           <div className="min-w-full">
             <TimelineHeader startDate={visibleStart} endDate={visibleEnd} />
             
-            <div className="flex">
-              <EventList
-                events={displayEvents}
-                onSelectEvent={handleEditEvent}
-                selectedEventId={selectedEvent?.id || null}
-              />
+            <div className="flex relative">
+              <div className="sticky left-0 z-20 bg-white">
+                <EventList
+                  events={displayEvents}
+                  onSelectEvent={handleEditEvent}
+                  selectedEventId={selectedEvent?.id || null}
+                />
+              </div>
               <TimelineGrid
                 events={displayEvents}
                 groups={groups}
