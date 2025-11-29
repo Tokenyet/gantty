@@ -6,7 +6,7 @@ https://github.com/user-attachments/assets/ffc5d4e9-2952-4151-8d64-6c4a7ec33745
 
 ## 🎯 Features
 
-### ✅ All User Stories Complete (Phas`es 1-9)
+### ✅ All User Stories Complete (Phases 1-9)
 
 #### User Story 1: Create and View Basic Gantt Chart (P1) - MVP
 - Create, edit, and delete events (tasks)
