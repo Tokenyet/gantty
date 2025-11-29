@@ -1,5 +1,3 @@
-import { ProjectRepository } from './project_repository';
-import { Project } from './types';
 import { StorageService } from '@/lib/gantt-chart/repository/storage_service';
 import {
   EVENTS_BASE_KEY,
@@ -8,8 +6,10 @@ import {
   VERSION_METADATA_BASE_KEY,
   VERSIONS_BASE_KEY
 } from '@/lib/gantt-chart/repository/project_scope';
-import { NotFoundError, ValidationError } from '@/lib/gantt-chart/usecase/errors';
 import { validateLength, validateNonEmpty } from '@/lib/shared/utils/validation';
+import { ProjectRepository } from '../usecase/project_repository';
+import { Project } from '../usecase/types';
+import { NotFoundError, ValidationError } from '../usecase/errors';
 
 const PROJECTS_KEY = 'projects_v1';
 const DEFAULT_PROJECT_NAME = 'My First Project';

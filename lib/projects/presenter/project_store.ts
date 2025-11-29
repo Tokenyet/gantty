@@ -2,8 +2,19 @@
 
 import { create } from 'zustand';
 import { setActiveProjectId } from '@/lib/gantt-chart/repository/project_scope';
-import { projectRepository } from './repository';
-import { Project } from './types';
+import { projectRepository } from '../repository';
+import { Project } from '../usecase/types';
+import { CreateProjectUsecase } from '../usecase/create_project_usecase';
+import { RenameProjectUsecase } from '../usecase/rename_project_usecase';
+import { DeleteProjectUsecase } from '../usecase/delete_project_usecase';
+import { ReorderProjectsUsecase } from '../usecase/reorder_projects_usecase';
+import { GetProjectsUsecase } from '../usecase/get_projects_usecase';
+
+const getProjectsUsecase = new GetProjectsUsecase(projectRepository);
+const createProjectUsecase = new CreateProjectUsecase(projectRepository);
+const renameProjectUsecase = new RenameProjectUsecase(projectRepository);
+const deleteProjectUsecase = new DeleteProjectUsecase(projectRepository);
+const reorderProjectsUsecase = new ReorderProjectsUsecase(projectRepository);
 
 interface ProjectStoreState {
   projects: Project[];
@@ -30,7 +41,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   loadProjects: async () => {
     set({ isLoading: true, error: null });
     try {
-      const projects = await projectRepository.getAll();
+      const projects = await getProjectsUsecase.execute();
       const currentActive = get().activeProjectId;
       const nextActive =
         currentActive && projects.some((p) => p.id === currentActive)
@@ -55,7 +66,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
     try {
       const projects = get().projects;
       const fallbackName = `Project ${projects.length + 1}`;
-      const project = await projectRepository.create(name?.trim() || fallbackName);
+      const project = await createProjectUsecase.execute(name?.trim() || fallbackName);
 
       const updated = [...projects, project].sort((a, b) => a.order - b.order);
       setActiveProjectId(project.id);
@@ -79,7 +90,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   renameProject: async (id: string, name: string) => {
     set({ isLoading: true, error: null });
     try {
-      const updated = await projectRepository.rename(id, name);
+      const updated = await renameProjectUsecase.execute(id, name);
       set((state) => ({
         projects: state.projects.map((p) => (p.id === id ? updated : p)),
         isLoading: false
@@ -95,11 +106,11 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   deleteProject: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
-      await projectRepository.delete(id);
+      await deleteProjectUsecase.execute(id);
       const remaining = get().projects.filter((p) => p.id !== id);
 
       if (remaining.length === 0) {
-        const refreshed = await projectRepository.getAll();
+        const refreshed = await getProjectsUsecase.execute();
         const fallbackActive = refreshed[0]?.id ?? null;
 
         if (fallbackActive !== get().activeProjectId) {
@@ -156,7 +167,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
     set({ projects: normalized });
 
     try {
-      await projectRepository.reorder(normalized);
+      await reorderProjectsUsecase.execute(normalized);
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to reorder projects'

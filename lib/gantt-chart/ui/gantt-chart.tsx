@@ -18,7 +18,7 @@ import GroupFilter from './group-filter';
 import TimeControls from './time-controls';
 import VersionList from './version-list';
 import GroupManager from './group-manager';
-import { useProjectStore } from '@/lib/projects/project_store';
+import { useProjectStore } from '@/lib/projects/presenter/project_store';
 import { eventRepository, groupRepository } from '../repository';
 
 export default function GanttChart() {
