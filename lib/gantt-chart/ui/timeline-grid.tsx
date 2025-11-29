@@ -131,7 +131,7 @@ export default function TimelineGrid({
           <div
             key={event.id}
             className="relative border-b border-gray-200"
-            style={{ minHeight: '48px' }}
+            style={{ minHeight: '56px' }}
           >
             {/* Day grid cells */}
             <div className="absolute inset-0 flex">
