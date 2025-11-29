@@ -524,14 +524,14 @@ export default function GanttChart() {
             <h2 className="text-xl font-bold text-gray-900 mb-4">Save Version</h2>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
                 Version Note
               </label>
               <textarea
                 value={versionNote}
                 onChange={(e) => setVersionNote(e.target.value)}
                 placeholder="Describe the changes in this version..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 font-medium"
                 rows={3}
               />
             </div>
@@ -539,7 +539,7 @@ export default function GanttChart() {
             <div className="flex gap-3">
               <button
                 onClick={handleSaveVersion}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold transition-colors"
               >
                 Save
               </button>
@@ -548,7 +548,7 @@ export default function GanttChart() {
                   setIsSaveVersionOpen(false);
                   setVersionNote('');
                 }}
-                className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                className="flex-1 px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
               >
                 Cancel
               </button>
