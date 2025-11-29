@@ -65,6 +65,13 @@ export default function GanttChart() {
   
   // Track if groups have been initialized to prevent re-initialization
   const groupsInitialized = useRef(false);
+  
+  // Drag-to-pan state
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const hasDragged = useRef(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const scrollStartPos = useRef({ left: 0, top: 0 });
 
   // Load data on mount
   useEffect(() => {
@@ -127,6 +134,109 @@ export default function GanttChart() {
       calculateFromEvents([]);
     }
   }, [filteredEvents, events, calculateFromEvents]);
+
+  // Drag-to-pan handlers
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    let rafId: number | null = null;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      // Only drag with left mouse button
+      if (e.button !== 0) return;
+      
+      const target = e.target as HTMLElement;
+      
+      // Don't drag if clicking on form elements
+      if (
+        target.tagName === 'BUTTON' || 
+        target.tagName === 'INPUT' || 
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT'
+      ) {
+        return;
+      }
+
+      isDragging.current = true;
+      hasDragged.current = false;
+      dragStartPos.current = { x: e.clientX, y: e.clientY };
+      scrollStartPos.current = { left: container.scrollLeft, top: container.scrollTop };
+      container.style.cursor = 'grabbing';
+      container.style.userSelect = 'none';
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+
+      const dx = dragStartPos.current.x - e.clientX;
+      const dy = dragStartPos.current.y - e.clientY;
+
+      // Mark as dragged if moved more than 3 pixels
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        hasDragged.current = true;
+      }
+
+      if (hasDragged.current) {
+        // Use requestAnimationFrame for smoother scrolling
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+        }
+        
+        rafId = requestAnimationFrame(() => {
+          container.scrollLeft = scrollStartPos.current.left + dx;
+          container.scrollTop = scrollStartPos.current.top + dy;
+        });
+        
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (isDragging.current && hasDragged.current) {
+        // Prevent click event from firing after drag
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      
+      isDragging.current = false;
+      hasDragged.current = false;
+      container.style.cursor = 'grab';
+      container.style.userSelect = '';
+      
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      // Prevent clicks if we just finished dragging
+      if (hasDragged.current) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    container.addEventListener('mousedown', handleMouseDown, true);
+    document.addEventListener('mousemove', handleMouseMove, true);
+    document.addEventListener('mouseup', handleMouseUp, true);
+    container.addEventListener('click', handleClick, true);
+
+    // Set initial cursor
+    container.style.cursor = 'grab';
+
+    return () => {
+      container.removeEventListener('mousedown', handleMouseDown, true);
+      document.removeEventListener('mousemove', handleMouseMove, true);
+      document.removeEventListener('mouseup', handleMouseUp, true);
+      container.removeEventListener('click', handleClick, true);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+  }, []);
 
   const handleCreateEvent = () => {
     selectEvent(null);
@@ -345,7 +455,7 @@ export default function GanttChart() {
       )}
 
       {/* Gantt Chart */}
-      <div className="flex-1 overflow-auto relative">
+      <div ref={scrollContainerRef} className="flex-1 overflow-auto relative">
         {visibleStart && visibleEnd && (
           <div className="min-w-full">
             <TimelineHeader startDate={visibleStart} endDate={visibleEnd} />
