@@ -1,9 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useVersionStore } from '../presenter/version_store';
-import { format } from '@/lib/shared/utils/date';
+import { useEventStore } from '../presenter/event_store';
+import { useGroupStore } from '../presenter/group_store';
+import { useFilterStore } from '../presenter/filter_store';
+import { useTimelineStore, ViewMode } from '../presenter/timeline_store';
+import { format, differenceInDays } from '@/lib/shared/utils/date';
+import { Version } from '../usecase/types';
+import { CalculateTimelineUsecase } from '../usecase/calculate_timeline_usecase';
+import TimelineHeader from './timeline-header';
+import TimelineGrid from './timeline-grid';
 
+const calculateTimelineUsecase = new CalculateTimelineUsecase();
 interface VersionListProps {
   onClose: () => void;
 }
@@ -16,20 +25,51 @@ export default function VersionList({ onClose }: VersionListProps) {
     isComparing,
     selectVersion,
     compareSelected,
-    deleteVersion,
-    clearSelection
+    clearSelection,
+    applyVersion,
+    isLoading
   } = useVersionStore();
+  const { loadEvents } = useEventStore();
+  const { loadGroups } = useGroupStore();
+  const { setSearchKeyword, setAllGroupsVisibility, applyFilters } = useFilterStore();
+  const { setTimelineRange, setFocusPeriod } = useTimelineStore();
 
   const [showDiff, setShowDiff] = useState(false);
+  const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [previewVersion, setPreviewVersion] = useState<Version | null>(null);
 
   const handleCompare = async () => {
     await compareSelected();
     setShowDiff(true);
   };
 
-  const handleDelete = async (id: string, versionNumber: number) => {
-    if (confirm(`Are you sure you want to delete Version ${versionNumber}?`)) {
-      await deleteVersion(id);
+  const handleUseVersion = async (versionId: string, versionNumber: number) => {
+    if (!confirm(`Use Version ${versionNumber}? This will overwrite current events and groups.`)) {
+      return;
+    }
+
+    try {
+      setApplyingId(versionId);
+      const snapshot = await applyVersion(versionId);
+
+      await Promise.all([loadGroups(), loadEvents()]);
+
+      setAllGroupsVisibility(true, snapshot.groups.map((g) => g.id));
+      setSearchKeyword(snapshot.settings?.searchKeyword ?? '');
+      applyFilters(snapshot.events);
+
+      if (snapshot.settings?.visibleStart && snapshot.settings.visibleEnd) {
+        setTimelineRange(snapshot.settings.visibleStart, snapshot.settings.visibleEnd);
+      }
+      setFocusPeriod(snapshot.settings?.focusPeriod ?? null);
+
+      clearSelection();
+      setShowDiff(false);
+      onClose();
+    } catch (error) {
+      alert('Failed to apply version: ' + (error as Error).message);
+    } finally {
+      setApplyingId(null);
     }
   };
 
@@ -128,15 +168,31 @@ export default function VersionList({ onClose }: VersionListProps) {
                               </p>
                             </div>
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(version.id, version.number);
-                            }}
-                            className="text-red-600 hover:text-red-700 text-sm font-medium transition-colors"
-                          >
-                            Delete
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviewVersion(version);
+                              }}
+                              className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-white border border-gray-200 text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUseVersion(version.id, version.number);
+                              }}
+                              disabled={isLoading || applyingId === version.id}
+                              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                                isLoading || applyingId === version.id
+                                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                  : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'
+                              }`}
+                            >
+                              {applyingId === version.id ? 'Applying...' : 'Use this version'}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -320,6 +376,134 @@ export default function VersionList({ onClose }: VersionListProps) {
             )}
           </div>
         )}
+      </div>
+
+      {previewVersion && (
+        <VersionPreviewDialog
+          version={previewVersion}
+          onClose={() => setPreviewVersion(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+interface VersionPreviewDialogProps {
+  version: Version;
+  onClose: () => void;
+}
+
+function VersionPreviewDialog({ version, onClose }: VersionPreviewDialogProps) {
+  const { snapshot } = version;
+  const [viewMode, setViewMode] = useState<ViewMode>('day');
+  const [dayWidth, setDayWidth] = useState(80);
+
+  const timelineRange = useMemo(() => {
+    if (snapshot.settings?.visibleStart && snapshot.settings.visibleEnd) {
+      const totalDays = differenceInDays(snapshot.settings.visibleEnd, snapshot.settings.visibleStart) + 1;
+      return {
+        startDate: snapshot.settings.visibleStart,
+        endDate: snapshot.settings.visibleEnd,
+        totalDays: Math.max(totalDays, 1)
+      };
+    }
+
+    return calculateTimelineUsecase.execute(snapshot.events);
+  }, [snapshot]);
+
+  const focusPeriod = snapshot.settings?.focusPeriod ?? null;
+
+  const setMode = (mode: ViewMode) => {
+    setViewMode(mode);
+    if (mode === 'week') {
+      setDayWidth(20);
+    } else if (mode === 'month') {
+      setDayWidth(5);
+    } else {
+      setDayWidth(80);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[120] bg-black bg-opacity-60 flex items-center justify-center px-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+          <div>
+            <div className="text-sm text-gray-500 font-medium">Version {version.number}</div>
+            <div className="text-xl font-bold text-gray-900 mt-1">{version.note || 'No description'}</div>
+            <div className="text-sm text-gray-600 mt-1">
+              {snapshot.events.length} events • {snapshot.groups.length} groups
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+              {(['day', 'week', 'month'] as ViewMode[]).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setMode(mode)}
+                  className={`px-3 py-1.5 text-sm font-semibold ${
+                    viewMode === mode
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {mode === 'day' ? 'Day' : mode === 'week' ? 'Week' : 'Month'}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={onClose}
+              className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-100 font-semibold shadow-sm"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 py-3 border-b border-gray-200 bg-white">
+          <div className="flex flex-wrap items-center gap-2">
+            {snapshot.groups.map((group) => (
+              <div
+                key={group.id}
+                className="px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-2 border border-gray-200"
+                style={{ backgroundColor: `${group.color}20` }}
+              >
+                <span
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: group.color }}
+                />
+                <span className="text-gray-800">{group.name}</span>
+              </div>
+            ))}
+            {snapshot.groups.length === 0 && (
+              <span className="text-gray-500 text-sm">No groups in this snapshot</span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-auto bg-gray-50">
+          <div className="min-w-full w-max">
+            <TimelineHeader
+              startDate={timelineRange.startDate}
+              endDate={timelineRange.endDate}
+              viewMode={viewMode}
+              dayWidth={dayWidth}
+            />
+            <div className="relative">
+              <TimelineGrid
+                events={snapshot.events}
+                groups={snapshot.groups}
+                startDate={timelineRange.startDate}
+                endDate={timelineRange.endDate}
+                totalDays={timelineRange.totalDays}
+                onSelectEvent={() => {}}
+                viewMode={viewMode}
+                dayWidth={dayWidth}
+                focusPeriod={focusPeriod}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

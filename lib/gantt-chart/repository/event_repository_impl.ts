@@ -167,6 +167,19 @@ export class EventRepositoryImpl implements EventRepository {
     await this.saveEvents(orderedEvents);
   }
 
+  async replaceAll(events: Event[]): Promise<void> {
+    const seen = new Set<string>();
+
+    for (const event of events) {
+      if (seen.has(event.id)) {
+        throw new ValidationError('Event snapshot contains duplicate ids', 'events', 'duplicate_id');
+      }
+      seen.add(event.id);
+    }
+
+    await this.saveEvents(events);
+  }
+
   private async saveEvents(events: Event[]): Promise<void> {
     const stored: StoredEvents = {
       version: '1.0',

@@ -172,6 +172,19 @@ export class GroupRepositoryImpl implements GroupRepository {
     return DEFAULT_GROUPS;
   }
 
+  async replaceAll(groups: Group[]): Promise<void> {
+    const seen = new Set<string>();
+
+    for (const group of groups) {
+      if (seen.has(group.id)) {
+        throw new ValidationError('Group snapshot contains duplicate ids', 'groups', 'duplicate_id');
+      }
+      seen.add(group.id);
+    }
+
+    await this.saveGroups(groups);
+  }
+
   private async saveGroups(groups: Group[]): Promise<void> {
     const stored: StoredGroups = {
       version: '1.0',

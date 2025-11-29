@@ -1,14 +1,17 @@
 import { create } from 'zustand';
 import { Version, VersionDiff, VersionSnapshot } from '../usecase/types';
-import { VersionRepositoryImpl } from '../repository/version_repository_impl';
-import { LocalStorageService } from '../external/local_storage_service';
 import { SaveVersionUsecase } from '../usecase/save_version_usecase';
 import { CompareVersionsUsecase } from '../usecase/compare_versions_usecase';
+import { ApplyVersionUsecase } from '../usecase/apply_version_usecase';
+import { eventRepository, groupRepository, versionRepository } from '../repository';
 
-const storageService = new LocalStorageService();
-const versionRepository = new VersionRepositoryImpl(storageService);
 const saveVersionUsecase = new SaveVersionUsecase(versionRepository);
 const compareVersionsUsecase = new CompareVersionsUsecase(versionRepository);
+const applyVersionUsecase = new ApplyVersionUsecase(
+  versionRepository,
+  eventRepository,
+  groupRepository
+);
 
 interface VersionStoreState {
   // State
@@ -25,6 +28,7 @@ interface VersionStoreState {
   selectVersion: (id: string, isSelected: boolean) => void;
   compareSelected: () => Promise<void>;
   deleteVersion: (id: string) => Promise<void>;
+  applyVersion: (id: string) => Promise<VersionSnapshot>;
   clearSelection: () => void;
 }
 
@@ -125,6 +129,21 @@ export const useVersionStore = create<VersionStoreState>((set, get) => ({
         error: error instanceof Error ? error.message : 'Failed to delete version',
         isLoading: false
       });
+    }
+  },
+
+  applyVersion: async (id: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const snapshot = await applyVersionUsecase.execute(id);
+      set({ isLoading: false });
+      return snapshot;
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to apply version',
+        isLoading: false
+      });
+      throw error;
     }
   },
 

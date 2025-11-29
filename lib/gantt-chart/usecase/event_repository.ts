@@ -53,4 +53,9 @@ export interface EventRepository {
    * @param orderedEvents - Events in the desired order
    */
   reorder(orderedEvents: Event[]): Promise<void>;
+
+  /**
+   * Replace all events with the provided list (used for version restore)
+   */
+  replaceAll(events: Event[]): Promise<void>;
 }

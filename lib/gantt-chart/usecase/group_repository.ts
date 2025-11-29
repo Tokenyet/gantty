@@ -55,4 +55,9 @@ export interface GroupRepository {
    * @returns Promise resolving to array of default groups
    */
   initializeDefaults(): Promise<Group[]>;
+
+  /**
+   * Replace all groups with the provided list (used for version restore)
+   */
+  replaceAll(groups: Group[]): Promise<void>;
 }

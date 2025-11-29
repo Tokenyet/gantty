@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Event, Group } from '../usecase/types';
+import { Event, Group, FocusPeriod } from '../usecase/types';
 import { differenceInDays } from '@/lib/shared/utils/date';
 import EventBar from './event-bar';
-import { useTimelineStore } from '../presenter/timeline_store';
 
 import { ViewMode } from '../presenter/timeline_store';
 
@@ -17,6 +16,7 @@ interface TimelineGridProps {
   onSelectEvent: (event: Event) => void;
   viewMode: ViewMode;
   dayWidth: number;
+  focusPeriod?: FocusPeriod | null;
 }
 
 export default function TimelineGrid({
@@ -27,10 +27,9 @@ export default function TimelineGrid({
   totalDays,
   onSelectEvent,
   viewMode,
-  dayWidth
+  dayWidth,
+  focusPeriod
 }: TimelineGridProps) {
-  const { focusPeriod } = useTimelineStore();
-
   // Create a map of groups for quick lookup
   const groupMap = new Map(groups.map(g => [g.id, g]));
 

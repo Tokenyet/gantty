@@ -45,7 +45,8 @@ export default function GanttChart() {
     totalDays,
     calculateFromEvents,
     viewMode,
-    dayWidth
+    dayWidth,
+    focusPeriod
   } = useTimelineStore();
 
   const {
@@ -500,6 +501,7 @@ export default function GanttChart() {
                 onSelectEvent={handleEditEvent}
                 viewMode={viewMode}
                 dayWidth={dayWidth}
+                focusPeriod={focusPeriod}
               />
             </div>
           </div>
