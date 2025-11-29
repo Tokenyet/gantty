@@ -69,6 +69,7 @@ export default function GanttChart() {
 
   // Track if groups have been initialized to prevent re-initialization
   const groupsInitialized = useRef(false);
+  const timelineSignatureRef = useRef('');
 
   // Drag-to-pan state
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -127,17 +128,27 @@ export default function GanttChart() {
     applyFilters(events);
   }, [events, searchKeyword, visibleGroupIds, applyFilters]);
 
+  // Determine which events to display
+  // If no groups are selected (size === 0), show empty list
+  // If some groups are filtered (size < groups.length) or search is active, show filtered results
+  // Otherwise show all events
+  const displayEvents = visibleGroupIds.size === 0
+    ? []
+    : (searchKeyword || visibleGroupIds.size < groups.length)
+      ? filteredEvents
+      : events;
+
   // Calculate timeline when events change
   useEffect(() => {
-    // Use filtered events for timeline calculation
-    const eventsToDisplay = filteredEvents.length > 0 ? filteredEvents : events;
-    if (eventsToDisplay.length > 0) {
-      calculateFromEvents(eventsToDisplay);
-    } else {
-      // Default timeline if no events
-      calculateFromEvents([]);
-    }
-  }, [filteredEvents, events, calculateFromEvents]);
+    const signature = (displayEvents.length === 0)
+      ? 'empty'
+      : displayEvents.map((e) => `${e.id}-${e.startDate}-${e.endDate}`).join('|');
+
+    if (signature === timelineSignatureRef.current) return;
+    timelineSignatureRef.current = signature;
+
+    calculateFromEvents(displayEvents);
+  }, [displayEvents, calculateFromEvents]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     // Only drag with primary button (usually left click)
@@ -367,16 +378,6 @@ export default function GanttChart() {
 
   const isLoading = eventsLoading || groupsLoading;
   const error = eventError || groupError;
-
-  // Determine which events to display
-  // If no groups are selected (size === 0), show empty list
-  // If some groups are filtered (size < groups.length) or search is active, show filtered results
-  // Otherwise show all events
-  const displayEvents = visibleGroupIds.size === 0
-    ? []
-    : (searchKeyword || visibleGroupIds.size < groups.length)
-      ? filteredEvents
-      : events;
 
   if (isLoading && events.length === 0) {
     return (
