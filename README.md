@@ -2,6 +2,8 @@
 
 A local browser-based Gantt chart tool for project planning and schedule tracking built with Next.js, TypeScript, and Clean Architecture.
 
+https://github.com/user-attachments/assets/ffc5d4e9-2952-4151-8d64-6c4a7ec33745
+
 ## 🎯 Features
 
 ### ✅ All User Stories Complete (Phas`es 1-9)
