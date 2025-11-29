@@ -1,7 +1,11 @@
 import { VersionRepository } from '../usecase/version_repository';
 import { Version, CreateVersionData } from '../usecase/types';
 import { StorageService } from './storage_service';
-import { NotFoundError } from '../usecase/errors';
+import {
+  getProjectScopedKey,
+  VERSION_METADATA_BASE_KEY,
+  VERSIONS_BASE_KEY
+} from './project_scope';
 
 // Simple UUID v4 generator
 function generateUUID(): string {
@@ -11,9 +15,6 @@ function generateUUID(): string {
     return v.toString(16);
   });
 }
-
-const VERSIONS_KEY = 'versions_v1';
-const METADATA_KEY = 'metadata_v1';
 
 interface StoredVersions {
   version: string;
@@ -31,7 +32,7 @@ export class VersionRepositoryImpl implements VersionRepository {
   constructor(private storage: StorageService) {}
 
   async getAll(): Promise<Version[]> {
-    const stored = await this.storage.get<StoredVersions>(VERSIONS_KEY);
+    const stored = await this.storage.get<StoredVersions>(this.getVersionsKey());
     if (!stored || !stored.data) {
       return [];
     }
@@ -83,7 +84,7 @@ export class VersionRepositoryImpl implements VersionRepository {
   }
 
   async getNextVersionNumber(): Promise<number> {
-    const metadata = await this.storage.get<Metadata>(METADATA_KEY);
+    const metadata = await this.storage.get<Metadata>(this.getMetadataKey());
     if (!metadata || !metadata.initialized) {
       await this.initializeMetadata();
       return 1;
@@ -97,7 +98,7 @@ export class VersionRepositoryImpl implements VersionRepository {
       lastUpdated: new Date().toISOString(),
       data: versions
     };
-    await this.storage.set(VERSIONS_KEY, stored);
+    await this.storage.set(this.getVersionsKey(), stored);
   }
 
   private async initializeMetadata(): Promise<void> {
@@ -106,7 +107,7 @@ export class VersionRepositoryImpl implements VersionRepository {
       nextVersionNumber: 1,
       initialized: true
     };
-    await this.storage.set(METADATA_KEY, metadata);
+    await this.storage.set(this.getMetadataKey(), metadata);
   }
 
   private async updateMetadata(nextVersionNumber: number): Promise<void> {
@@ -115,6 +116,14 @@ export class VersionRepositoryImpl implements VersionRepository {
       nextVersionNumber,
       initialized: true
     };
-    await this.storage.set(METADATA_KEY, metadata);
+    await this.storage.set(this.getMetadataKey(), metadata);
+  }
+
+  private getVersionsKey(): string {
+    return getProjectScopedKey(VERSIONS_BASE_KEY);
+  }
+
+  private getMetadataKey(): string {
+    return getProjectScopedKey(VERSION_METADATA_BASE_KEY);
   }
 }

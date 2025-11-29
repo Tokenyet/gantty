@@ -4,6 +4,7 @@ import { SaveVersionUsecase } from '../usecase/save_version_usecase';
 import { CompareVersionsUsecase } from '../usecase/compare_versions_usecase';
 import { ApplyVersionUsecase } from '../usecase/apply_version_usecase';
 import { eventRepository, groupRepository, versionRepository } from '../repository';
+import { tryGetActiveProjectId } from '../repository/project_scope';
 
 const saveVersionUsecase = new SaveVersionUsecase(versionRepository);
 const compareVersionsUsecase = new CompareVersionsUsecase(versionRepository);
@@ -30,6 +31,7 @@ interface VersionStoreState {
   deleteVersion: (id: string) => Promise<void>;
   applyVersion: (id: string) => Promise<VersionSnapshot>;
   clearSelection: () => void;
+  reset: () => void;
 }
 
 export const useVersionStore = create<VersionStoreState>((set, get) => ({
@@ -43,6 +45,12 @@ export const useVersionStore = create<VersionStoreState>((set, get) => ({
 
   // Actions
   loadVersions: async () => {
+    const projectId = tryGetActiveProjectId();
+    if (!projectId) {
+      set({ versions: [], selectedVersionIds: [], isLoading: false, error: 'Please select a project' });
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const versions = await versionRepository.getAll();
@@ -58,7 +66,7 @@ export const useVersionStore = create<VersionStoreState>((set, get) => ({
   saveVersion: async (note: string, snapshot: VersionSnapshot) => {
     set({ isLoading: true, error: null });
     try {
-      const version = await saveVersionUsecase.execute(note, snapshot);
+      await saveVersionUsecase.execute(note, snapshot);
       const versions = await versionRepository.getAll();
       set({ versions, isLoading: false });
     } catch (error) {
@@ -149,5 +157,16 @@ export const useVersionStore = create<VersionStoreState>((set, get) => ({
 
   clearSelection: () => {
     set({ selectedVersionIds: [], diff: null, isComparing: false });
+  },
+
+  reset: () => {
+    set({
+      versions: [],
+      selectedVersionIds: [],
+      diff: null,
+      isComparing: false,
+      isLoading: false,
+      error: null
+    });
   }
 }));

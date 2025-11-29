@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Event, CreateEventData, UpdateEventData, Group } from '../usecase/types';
 import { getTodayISO, toISODate, addDays } from '@/lib/shared/utils/date';
 

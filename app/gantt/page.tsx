@@ -1,5 +1,5 @@
-import GanttChart from '@/lib/gantt-chart/ui/gantt-chart';
+import { redirect } from 'next/navigation';
 
-export default function GanttPage() {
-  return <GanttChart />;
+export default function GanttIndexRedirect() {
+  redirect('/');
 }

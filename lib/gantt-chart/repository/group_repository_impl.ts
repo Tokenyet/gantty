@@ -3,6 +3,7 @@ import { Group, CreateGroupData, UpdateGroupData } from '../usecase/types';
 import { StorageService } from './storage_service';
 import { NotFoundError, ValidationError, BusinessRuleViolationError } from '../usecase/errors';
 import { validateNonEmpty, validateHexColor, validateLength } from '@/lib/shared/utils/validation';
+import { getProjectScopedKey, GROUPS_BASE_KEY } from './project_scope';
 
 // Simple UUID v4 generator
 function generateUUID(): string {
@@ -12,8 +13,6 @@ function generateUUID(): string {
     return v.toString(16);
   });
 }
-
-const GROUPS_KEY = 'groups_v1';
 
 interface StoredGroups {
   version: string;
@@ -34,12 +33,12 @@ export class GroupRepositoryImpl implements GroupRepository {
   ) {}
 
   async getAll(): Promise<Group[]> {
-    const stored = await this.storage.get<StoredGroups>(GROUPS_KEY);
+    const stored = await this.storage.get<StoredGroups>(this.getStorageKey());
     
     // If no groups exist, initialize with defaults
     if (!stored || !stored.data || stored.data.length === 0) {
       await this.initializeDefaults();
-      const newStored = await this.storage.get<StoredGroups>(GROUPS_KEY);
+      const newStored = await this.storage.get<StoredGroups>(this.getStorageKey());
       return newStored?.data || [];
     }
     
@@ -191,6 +190,10 @@ export class GroupRepositoryImpl implements GroupRepository {
       lastUpdated: new Date().toISOString(),
       data: groups
     };
-    await this.storage.set(GROUPS_KEY, stored);
+    await this.storage.set(this.getStorageKey(), stored);
+  }
+
+  private getStorageKey(): string {
+    return getProjectScopedKey(GROUPS_BASE_KEY);
   }
 }

@@ -6,6 +6,7 @@ import { CreateEventUsecase } from '../usecase/create_event_usecase';
 import { UpdateEventUsecase } from '../usecase/update_event_usecase';
 import { DeleteEventUsecase } from '../usecase/delete_event_usecase';
 import { eventRepository } from '../repository';
+import { tryGetActiveProjectId } from '../repository/project_scope';
 
 // Use cases
 const createEventUsecase = new CreateEventUsecase(eventRepository);
@@ -27,6 +28,7 @@ interface EventStoreState {
   selectEvent: (event: Event | null) => void;
   reorderEvents: (activeId: string, overId: string) => Promise<void>;
   clearError: () => void;
+  reset: () => void;
 }
 
 export const useEventStore = create<EventStoreState>((set, get) => ({
@@ -38,6 +40,17 @@ export const useEventStore = create<EventStoreState>((set, get) => ({
 
   // Actions
   loadEvents: async () => {
+    const projectId = tryGetActiveProjectId();
+    if (!projectId) {
+      set({
+        events: [],
+        selectedEvent: null,
+        isLoading: false,
+        error: 'Please select a project'
+      });
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const events = await eventRepository.getAll();
@@ -119,5 +132,14 @@ export const useEventStore = create<EventStoreState>((set, get) => ({
 
   clearError: () => {
     set({ error: null });
+  },
+
+  reset: () => {
+    set({
+      events: [],
+      selectedEvent: null,
+      isLoading: false,
+      error: null
+    });
   }
 }));

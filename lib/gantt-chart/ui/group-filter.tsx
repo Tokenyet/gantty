@@ -23,7 +23,6 @@ export default function GroupFilter({ groups, onFilterChange }: GroupFilterProps
   };
 
   const allSelected = groups.length > 0 && groups.every(g => visibleGroupIds.has(g.id));
-  const someSelected = groups.some(g => visibleGroupIds.has(g.id)) && !allSelected;
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">

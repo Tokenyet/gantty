@@ -13,6 +13,7 @@ interface FilterStoreState {
   toggleGroupVisibility: (groupId: string) => void;
   setAllGroupsVisibility: (visible: boolean, groupIds: string[]) => void;
   applyFilters: (allEvents: Event[]) => void;
+  reset: () => void;
 }
 
 const filterUsecase = new FilterEventsUsecase();
@@ -58,4 +59,12 @@ export const useFilterStore = create<FilterStoreState>((set, get) => ({
 
     set({ filteredEvents: filtered });
   },
+
+  reset: () => {
+    set({
+      searchKeyword: '',
+      visibleGroupIds: new Set<string>(),
+      filteredEvents: []
+    });
+  }
 }));

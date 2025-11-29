@@ -3,6 +3,7 @@ import { Event, CreateEventData, UpdateEventData } from '../usecase/types';
 import { StorageService } from './storage_service';
 import { NotFoundError, ValidationError } from '../usecase/errors';
 import { validateDateRange, validateNonEmpty, validateLength, validateISODate } from '@/lib/shared/utils/validation';
+import { EVENTS_BASE_KEY, getProjectScopedKey } from './project_scope';
 
 // Simple UUID v4 generator
 function generateUUID(): string {
@@ -12,8 +13,6 @@ function generateUUID(): string {
     return v.toString(16);
   });
 }
-
-const EVENTS_KEY = 'events_v1';
 
 interface StoredEvents {
   version: string;
@@ -28,7 +27,7 @@ export class EventRepositoryImpl implements EventRepository {
   ) {}
 
   async getAll(): Promise<Event[]> {
-    const stored = await this.storage.get<StoredEvents>(EVENTS_KEY);
+    const stored = await this.storage.get<StoredEvents>(this.getStorageKey());
     return stored?.data || [];
   }
 
@@ -186,6 +185,10 @@ export class EventRepositoryImpl implements EventRepository {
       lastUpdated: new Date().toISOString(),
       data: events
     };
-    await this.storage.set(EVENTS_KEY, stored);
+    await this.storage.set(this.getStorageKey(), stored);
+  }
+
+  private getStorageKey(): string {
+    return getProjectScopedKey(EVENTS_BASE_KEY);
   }
 }

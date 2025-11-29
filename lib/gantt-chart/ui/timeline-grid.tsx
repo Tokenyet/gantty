@@ -11,7 +11,6 @@ interface TimelineGridProps {
   events: Event[];
   groups: Group[];
   startDate: string;
-  endDate: string;
   totalDays: number;
   onSelectEvent: (event: Event) => void;
   viewMode: ViewMode;
@@ -23,7 +22,6 @@ export default function TimelineGrid({
   events,
   groups,
   startDate,
-  endDate,
   totalDays,
   onSelectEvent,
   viewMode,

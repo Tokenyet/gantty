@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useEventStore } from '../presenter/event_store';
 import { useGroupStore } from '../presenter/group_store';
 import { useTimelineStore } from '../presenter/timeline_store';
 import { useFilterStore } from '../presenter/filter_store';
 import { useVersionStore } from '../presenter/version_store';
-import { Event } from '../usecase/types';
+import { Event, CreateEventData, UpdateEventData } from '../usecase/types';
 import { differenceInDays } from '@/lib/shared/utils/date';
 import TimelineHeader from './timeline-header';
 import EventList from './event-list';
@@ -17,6 +17,7 @@ import GroupFilter from './group-filter';
 import TimeControls from './time-controls';
 import VersionList from './version-list';
 import GroupManager from './group-manager';
+import { useProjectStore } from '@/lib/projects/project_store';
 
 export default function GanttChart() {
   const {
@@ -67,6 +68,10 @@ export default function GanttChart() {
   const [isSaveVersionOpen, setIsSaveVersionOpen] = useState(false);
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
   const [versionNote, setVersionNote] = useState('');
+  const activeProjectId = useProjectStore((state) => state.activeProjectId);
+  const activeProject = useProjectStore((state) =>
+    state.projects.find((p) => p.id === state.activeProjectId) || null
+  );
 
   // Track if groups have been initialized to prevent re-initialization
   const groupsInitialized = useRef(false);
@@ -79,12 +84,24 @@ export default function GanttChart() {
   const dragStartPos = useRef({ x: 0, y: 0 });
   const scrollStartPos = useRef({ left: 0, top: 0 });
 
-  // Load data on mount
+  const handleCloseForm = useCallback(() => {
+    setIsFormOpen(false);
+    selectEvent(null);
+  }, [selectEvent]);
+
+  // Load data when the active project changes (or on first mount once it is set)
   useEffect(() => {
+    if (!activeProjectId) {
+      return;
+    }
+
+    groupsInitialized.current = false;
+    timelineSignatureRef.current = '';
+
     loadGroups();
     loadEvents();
     loadVersions();
-  }, [loadGroups, loadEvents, loadVersions]);
+  }, [activeProjectId, loadGroups, loadEvents, loadVersions]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -114,15 +131,18 @@ export default function GanttChart() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFormOpen, isSaveVersionOpen, isVersionListOpen, isGroupManagerOpen]);
+  }, [isFormOpen, isSaveVersionOpen, isVersionListOpen, isGroupManagerOpen, handleCloseForm]);
 
   // Initialize all groups as visible when groups first load (only once)
   useEffect(() => {
-    if (groups.length > 0 && !groupsInitialized.current) {
+    if (groups.length === 0) return;
+
+    // Ensure groups are visible when first loaded or after a project switch.
+    if (!groupsInitialized.current || visibleGroupIds.size === 0) {
       setAllGroupsVisibility(true, groups.map(g => g.id));
       groupsInitialized.current = true;
     }
-  }, [groups, setAllGroupsVisibility]);
+  }, [groups, visibleGroupIds.size, setAllGroupsVisibility]);
 
   // Apply filters when events, search keyword, or visible groups change
   useEffect(() => {
@@ -133,11 +153,17 @@ export default function GanttChart() {
   // If no groups are selected (size === 0), show empty list
   // If some groups are filtered (size < groups.length) or search is active, show filtered results
   // Otherwise show all events
-  const displayEvents = visibleGroupIds.size === 0
-    ? []
-    : (searchKeyword || visibleGroupIds.size < groups.length)
-      ? filteredEvents
-      : events;
+  const displayEvents = useMemo(() => {
+    if (visibleGroupIds.size === 0) {
+      return [];
+    }
+
+    if (searchKeyword || visibleGroupIds.size < groups.length) {
+      return filteredEvents;
+    }
+
+    return events;
+  }, [visibleGroupIds, searchKeyword, groups.length, filteredEvents, events]);
 
   // Calculate timeline when events change
   useEffect(() => {
@@ -264,21 +290,23 @@ export default function GanttChart() {
     setIsFormOpen(true);
   };
 
-  const handleSaveEvent = async (data: any) => {
+  const handleSaveEvent = async (data: CreateEventData | UpdateEventData) => {
     if (selectedEvent) {
       await updateEvent(selectedEvent.id, data);
     } else {
-      await createEvent(data);
+      const createData = data as CreateEventData;
+      await createEvent({
+        name: createData.name,
+        description: createData.description,
+        startDate: createData.startDate,
+        endDate: createData.endDate,
+        groupId: createData.groupId
+      });
     }
   };
 
   const handleDeleteEvent = async (id: string) => {
     await deleteEvent(id);
-  };
-
-  const handleCloseForm = () => {
-    setIsFormOpen(false);
-    selectEvent(null);
   };
 
   const handleFilterChange = () => {
@@ -392,7 +420,16 @@ export default function GanttChart() {
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b-2 border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900">Gantt Chart</h1>
+        <div className="flex flex-col">
+          <h1 className="text-2xl font-bold text-gray-900">
+            {activeProject ? `${activeProject.name} — Gantt` : 'Gantt Chart'}
+          </h1>
+          <p className="text-sm text-gray-500">
+            {activeProject
+              ? 'Changes are stored in this project only.'
+              : 'Pick a project to start planning.'}
+          </p>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={handleExportData}
@@ -496,7 +533,6 @@ export default function GanttChart() {
                 events={displayEvents}
                 groups={groups}
                 startDate={visibleStart}
-                endDate={visibleEnd}
                 totalDays={totalDays}
                 onSelectEvent={handleEditEvent}
                 viewMode={viewMode}

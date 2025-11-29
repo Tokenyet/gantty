@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { Group, CreateGroupData, UpdateGroupData } from '../usecase/types';
 import { groupRepository } from '../repository';
+import { tryGetActiveProjectId } from '../repository/project_scope';
 
 interface GroupStoreState {
   // State
@@ -17,6 +18,7 @@ interface GroupStoreState {
   deleteGroup: (id: string) => Promise<void>;
   toggleGroupVisibility: (id: string) => Promise<void>;
   clearError: () => void;
+  reset: () => void;
 }
 
 export const useGroupStore = create<GroupStoreState>((set, get) => ({
@@ -27,6 +29,12 @@ export const useGroupStore = create<GroupStoreState>((set, get) => ({
 
   // Actions
   loadGroups: async () => {
+    const projectId = tryGetActiveProjectId();
+    if (!projectId) {
+      set({ groups: [], isLoading: false, error: 'Please select a project' });
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const groups = await groupRepository.getAll();
@@ -94,5 +102,13 @@ export const useGroupStore = create<GroupStoreState>((set, get) => ({
 
   clearError: () => {
     set({ error: null });
+  },
+
+  reset: () => {
+    set({
+      groups: [],
+      isLoading: false,
+      error: null
+    });
   }
 }));
