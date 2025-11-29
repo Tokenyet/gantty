@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useEventStore } from '../presenter/event_store';
 import { useGroupStore } from '../presenter/group_store';
 import { useTimelineStore } from '../presenter/timeline_store';
@@ -62,6 +62,9 @@ export default function GanttChart() {
   const [isSaveVersionOpen, setIsSaveVersionOpen] = useState(false);
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
   const [versionNote, setVersionNote] = useState('');
+  
+  // Track if groups have been initialized to prevent re-initialization
+  const groupsInitialized = useRef(false);
 
   // Load data on mount
   useEffect(() => {
@@ -100,12 +103,13 @@ export default function GanttChart() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFormOpen, isSaveVersionOpen, isVersionListOpen, isGroupManagerOpen]);
 
-  // Initialize all groups as visible when groups load
+  // Initialize all groups as visible when groups first load (only once)
   useEffect(() => {
-    if (groups.length > 0 && visibleGroupIds.size === 0) {
+    if (groups.length > 0 && !groupsInitialized.current) {
       setAllGroupsVisibility(true, groups.map(g => g.id));
+      groupsInitialized.current = true;
     }
-  }, [groups, visibleGroupIds.size, setAllGroupsVisibility]);
+  }, [groups, setAllGroupsVisibility]);
 
   // Apply filters when events, search keyword, or visible groups change
   useEffect(() => {
@@ -251,9 +255,14 @@ export default function GanttChart() {
   const error = eventError || groupError;
 
   // Determine which events to display
-  const displayEvents = filteredEvents.length > 0 || searchKeyword || visibleGroupIds.size < groups.length
-    ? filteredEvents
-    : events;
+  // If no groups are selected (size === 0), show empty list
+  // If some groups are filtered (size < groups.length) or search is active, show filtered results
+  // Otherwise show all events
+  const displayEvents = visibleGroupIds.size === 0 
+    ? [] 
+    : (searchKeyword || visibleGroupIds.size < groups.length)
+      ? filteredEvents
+      : events;
 
   if (isLoading && events.length === 0) {
     return (
