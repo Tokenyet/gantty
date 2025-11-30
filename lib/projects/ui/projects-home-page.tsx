@@ -40,7 +40,7 @@ export default function ProjectsHomePage() {
 
   const handleOpen = (projectId: string) => {
     setActiveProject(projectId);
-    router.push(`/gantt/${projectId}`);
+    router.push(`/gantt?projectId=${encodeURIComponent(projectId)}`);
   };
 
   const handleRename = (project: Project) => {

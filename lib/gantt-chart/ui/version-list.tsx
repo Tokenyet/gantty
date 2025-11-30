@@ -510,7 +510,6 @@ function VersionPreviewDialog({ version, onClose }: VersionPreviewDialogProps) {
                 events={snapshot.events}
                 groups={snapshot.groups}
                 startDate={timelineRange.startDate}
-                endDate={timelineRange.endDate}
                 totalDays={timelineRange.totalDays}
                 onSelectEvent={() => {}}
                 viewMode={viewMode}
