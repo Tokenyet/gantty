@@ -70,6 +70,7 @@ export default function GanttChart() {
   const [isVersionListOpen, setIsVersionListOpen] = useState(false);
   const [isSaveVersionOpen, setIsSaveVersionOpen] = useState(false);
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
+  const [isGroupFilterOpen, setIsGroupFilterOpen] = useState(false);
   const [versionNote, setVersionNote] = useState('');
   const activeProjectId = useProjectStore((state) => state.activeProjectId);
   const activeProject = useProjectStore((state) =>
@@ -79,6 +80,7 @@ export default function GanttChart() {
   // Track if groups have been initialized to prevent re-initialization
   const groupsInitialized = useRef(false);
   const timelineSignatureRef = useRef('');
+  const groupFilterRef = useRef<HTMLDivElement>(null);
 
   // Drag-to-pan state
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -120,6 +122,8 @@ export default function GanttChart() {
           setIsVersionListOpen(false);
         } else if (isGroupManagerOpen) {
           setIsGroupManagerOpen(false);
+        } else if (isGroupFilterOpen) {
+          setIsGroupFilterOpen(false);
         }
       }
 
@@ -134,7 +138,23 @@ export default function GanttChart() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFormOpen, isSaveVersionOpen, isVersionListOpen, isGroupManagerOpen, handleCloseForm]);
+  }, [isFormOpen, isSaveVersionOpen, isVersionListOpen, isGroupManagerOpen, isGroupFilterOpen, handleCloseForm]);
+
+  // Close group filter popover when clicking outside
+  useEffect(() => {
+    if (!isGroupFilterOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!groupFilterRef.current) return;
+      const target = event.target as Node | null;
+      if (target && !groupFilterRef.current.contains(target)) {
+        setIsGroupFilterOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isGroupFilterOpen]);
 
   // Initialize all groups as visible when groups first load (only once)
   useEffect(() => {
@@ -496,12 +516,40 @@ export default function GanttChart() {
 
       {/* Filters and Search */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex gap-4 items-start">
-          <div className="flex-1 max-w-md">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex-1 min-w-[260px] max-w-xl">
             <SearchBar onSearch={handleFilterChange} />
           </div>
-          <div className="w-64">
-            <GroupFilter groups={groups} onFilterChange={handleFilterChange} />
+          <div ref={groupFilterRef} className="relative">
+            <button
+              onClick={() => setIsGroupFilterOpen((open) => !open)}
+              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 hover:bg-gray-50"
+            >
+              <span>Groups</span>
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-700">
+                {visibleGroupIds.size}/{groups.length || 0}
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                className={`h-4 w-4 transition-transform ${isGroupFilterOpen ? 'rotate-180' : ''}`}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+
+            {isGroupFilterOpen && (
+              <div className="absolute right-0 z-30 mt-2 w-72 max-w-sm">
+                <GroupFilter
+                  groups={groups}
+                  onFilterChange={handleFilterChange}
+                  className="w-full max-h-[60vh]"
+                />
+              </div>
+            )}
           </div>
           <div className="ml-auto">
             <TimeControls />

@@ -6,9 +6,10 @@ import { useFilterStore } from '../presenter/filter_store';
 interface GroupFilterProps {
   groups: Group[];
   onFilterChange?: () => void;
+  className?: string;
 }
 
-export default function GroupFilter({ groups, onFilterChange }: GroupFilterProps) {
+export default function GroupFilter({ groups, onFilterChange, className }: GroupFilterProps) {
   const { visibleGroupIds, toggleGroupVisibility, setAllGroupsVisibility } = useFilterStore();
 
   const handleToggle = (groupId: string) => {
@@ -23,9 +24,10 @@ export default function GroupFilter({ groups, onFilterChange }: GroupFilterProps
   };
 
   const allSelected = groups.length > 0 && groups.every(g => visibleGroupIds.has(g.id));
+  const containerClassName = `bg-white border border-gray-200 rounded-lg p-4 shadow-sm ${className ?? ''}`;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+    <div className={containerClassName}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-gray-900">Filter by Group</h3>
         <button
@@ -35,8 +37,8 @@ export default function GroupFilter({ groups, onFilterChange }: GroupFilterProps
           {allSelected ? 'Deselect All' : 'Select All'}
         </button>
       </div>
-      
-      <div className="space-y-1">
+
+      <div className="space-y-1 overflow-y-auto max-h-64 pr-1">
         {groups.map((group) => {
           const isChecked = visibleGroupIds.has(group.id);
           
